@@ -1,4 +1,17 @@
-﻿using System;
+﻿/**
+#######################################################
+期权期货数据整理和存储程序。
+利用万德API以及万德TDB数据库，提取期权和期货盘口数据。
+并且在这基础上，计算期权盘口价格对应的波动率和delta。
+作者：毛衡
+时间：2016-03-04
+版本：v1.0.0
+#######################################################
+
+#######################################################
+**/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +25,8 @@ namespace myWindAPI
     {
         static void Main(string[] args)
         {
-            DoAPISameple();
+            //获取50etf期权信息。
+            OptionInformation myOptionInfo = new OptionInformation(20160101);
         }
         static void DoAPISameple()
         {

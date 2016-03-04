@@ -46,8 +46,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration.cs" />
+    <Compile Include="Impv.cs" />
+    <Compile Include="OptionInformation.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StructTypePool.cs" />
+    <Compile Include="TradeDays.cs" />
     <Compile Include="WindDataMethod.cs" />
   </ItemGroup>
   <ItemGroup>
