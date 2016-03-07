@@ -46,26 +46,27 @@ namespace myWindAPI
         /// <param name="endDate">交易日结束时间</param>
         public TradeDays(int startDate,int endDate=0)
         {
+            //对给定的参数做一些勘误和修正。
+            if (endDate == 0)
+            {
+                endDate = Convert.ToInt32(DateTime.Now.ToString("yyyyMMdd"));
+            }
+            if (endDate < startDate)
+            {
+                Console.WriteLine("Wrong trade Date!");
+                startDate = endDate;
+            }
             //从本地数据库中读取交易日信息。
             GetDataFromDataBase();
             //从万德数据库中读取交易日信息。但仅在数据库没有构造的时候进行读取。并保持到本地数据库。
-            if (tradeDaysOfDataBase.Count==0 || tradeDaysOfDataBase[tradeDaysOfDataBase.Count-1]<20161231)
+            if (tradeDaysOfDataBase.Count == 0 || tradeDaysOfDataBase[tradeDaysOfDataBase.Count - 1] < 20161230)
             {
                 GetDataFromWindDataBase();
                 SaveTradeDaysData();
             }
             //根据给定的回测开始日期和结束日期，给出交易日列表。
             myTradeDays = new List<int>();
-            //对给定的参数做一些勘误和修正。
-            if (endDate==0)
-            {
-                endDate =Convert.ToInt32(DateTime.Now.ToString("yyyyMMdd"));
-            }
-            if (endDate<startDate)
-            {
-                Console.WriteLine("Wrong trade Date!");
-                startDate = endDate;
-            }
+           
             foreach (int date in tradeDaysOfDataBase)
             {
                 if (date>=startDate && date<=endDate)
@@ -105,7 +106,7 @@ namespace myWindAPI
                             //创建数据库命令  
                 SqlCommand cmd = conn.CreateCommand();
                 //创建查询语句  
-                cmd.CommandText = "select [Date] from ["+dataBaseName+"].[dbo].["+tradeDaysTableName+"]  order by [Date]";
+                cmd.CommandText = "select [Date] from ["+dataBaseName+"].[dbo].["+tradeDaysTableName+"] order by[Date]";
                 try
                 {
                     SqlDataReader reader = cmd.ExecuteReader();

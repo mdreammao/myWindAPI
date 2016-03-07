@@ -49,6 +49,57 @@ namespace myWindAPI
 
         }
         /// <summary>
+        /// 从数据库中读取期权信息，并判断是否完整。
+        /// </summary>
+        /// <param name="startDate">开始时间</param>
+        /// <param name="endDate">结束时间</param>
+        /// <returns>是否完整</returns>
+        private bool GetOptionListFromTable(int startDate,int endDate)
+        {
+            using (SqlConnection conn = new SqlConnection(connectString))
+            {
+                conn.Open();//打开数据库  
+                SqlCommand cmd = conn.CreateCommand();
+                cmd.CommandText = "select * from [" + dataBaseName + "].[dbo].[" + optionCodeTableName + "]";
+                int theLastCode = 0;
+                int theLastStartDate = 0;
+                try
+                {
+                    //从数据库中读取数据流存入reader中  
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    //从reader中读取下一行数据,如果没有数据,reader.Read()返回flase  
+                    while (reader.Read())
+                    {
+                        optionFormat newOption = new optionFormat();
+                        int optionCode = reader.GetInt32(reader.GetOrdinal("OptionCode"));
+                        theLastCode = (optionCode > theLastCode) ? optionCode : theLastCode;
+                        newOption.optionCode = optionCode;
+                        newOption.optionName = reader.GetString(reader.GetOrdinal("OptionName")).Trim();
+                        newOption.executeType = reader.GetString(reader.GetOrdinal("ExecuteType")).Trim();
+                        newOption.strike = reader.GetDouble(reader.GetOrdinal("Strike"));
+                        newOption.optionType = reader.GetString(reader.GetOrdinal("OptionType")).Trim();
+                        newOption.startDate = reader.GetInt32(reader.GetOrdinal("StartDate"));
+                        newOption.endDate= reader.GetInt32(reader.GetOrdinal("EndDate"));
+                        newOption.market= reader.GetString(reader.GetOrdinal("Market")).Trim();
+                        theLastStartDate = (theLastStartDate > newOption.startDate) ? theLastStartDate : newOption.startDate;
+                        if (myOptionList.ContainsKey(optionCode)==false)
+                        {
+                            myOptionList.Add(optionCode, newOption);
+                        }
+                    }
+                }
+                catch (Exception myerror)
+                {
+                    System.Console.WriteLine(myerror.Message);
+                }
+                if (theLastStartDate>=endDate && theLastCode % 10000 == myOptionList.Count)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        /// <summary>
         /// 按日期遍历，添加期权信息。写入静态哈希表myOptionList。
         /// </summary>
         /// <param name="startDate">开始日期</param>
@@ -57,6 +108,11 @@ namespace myWindAPI
         {
             //定义交易日期的类。
             TradeDays myTradeDays = new TradeDays(startDate, endDate);
+            //从数据库表中获取信息，如果已经是完整信息就不需要连接万德数据库。
+            if (GetOptionListFromTable(startDate,endDate)==true)
+            {
+                return;
+            }
             //按日期遍历，添加期权信息。
             WindAPI w = new WindAPI();
             w.start();

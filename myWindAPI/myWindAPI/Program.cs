@@ -7,6 +7,15 @@
 时间：2016-03-04
 版本：v1.0.0
 #######################################################
+1、更新了存储50etf数据的部分。
+2、修改了tradeDays的读取部分，防止重复从万德数据库中读取
+数据。
+3、修改了optionInformation的读取部分，防止重复从万德数据
+库中读取数据。
+作者：毛衡
+时间：2016-03-07
+版本：v1.0.1
+#######################################################
 
 #######################################################
 **/
@@ -18,6 +27,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WAPIWrapperCSharp;
 using WindCommon;
+using TDBAPI;
 
 namespace myWindAPI
 {
@@ -25,8 +35,8 @@ namespace myWindAPI
     {
         static void Main(string[] args)
         {
-            //获取50etf期权信息。
-            OptionInformation myOptionInfo = new OptionInformation(20160101);
+            
+            WindTDBData myTDBData = new WindTDBData("510050.SH", 20150101, 20151231, "option");
         }
         static void DoAPISameple()
         {
@@ -36,7 +46,6 @@ namespace myWindAPI
             //wset取沪深300指数成分
             //WindData wd = w.wset("IndexConstituent", "date=20141215;windcode=000300.SH");
             //OutputWindData(wd, "wset");
-
             //WindData wd = w.wsd("600000.SH,600004.SH", "open", "2014-10-16", "2014-12-16", "");
             //OutputWindData(wd, "wsd");
             WindData d = w.tdays("20150101", "20201213", "");

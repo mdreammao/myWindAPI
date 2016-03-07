@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace myWindAPI
 {
+   
     /// <summary>
     /// 提供各种配置参数的类。含有各类静态函数。
     /// </summary>
@@ -15,6 +16,10 @@ namespace myWindAPI
         /// 数据库的名称。
         /// </summary>
         public static string dataBaseName = "Option";
+        /// <summary>
+        /// 记录50etf的表名称。
+        /// </summary>
+        public static string tableOf50ETF = "SH510050";
         /// <summary>
         /// 保存交易日信息的数据表的名称。
         /// </summary>
@@ -31,5 +36,13 @@ namespace myWindAPI
         /// 保存期权合约基本信息的数据表的名称。
         /// </summary>
         public static string optionCodeTableName = "optionCodeInformation";
+        /// <summary>
+        /// 上交所及中金所连接信息。
+        /// </summary>
+        public static TDBsource SHsource = new TDBsource("114.80.154.34", "10061", "TD5928909016", "14158777");
+        /// <summary>
+        /// 商品期货连接信息。
+        /// </summary>
+        public static TDBsource commoditySource = new TDBsource("114.80.154.34", "10060", "TD5928909014", "13305104");
     }
 }

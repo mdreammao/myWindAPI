@@ -20,4 +20,31 @@ namespace myWindAPI
         public double strike;
         public string market;
     }
+    /// <summary>
+    /// 需要提取TDB数据的品种信息。
+    /// </summary>
+    struct TDBdataInformation
+    {
+        public string codeName;
+        public int startDate;
+        public int endDate;
+        public string type;
+    }
+    /// <summary>
+    /// 记录TDB连接信息的结构体。
+    /// </summary>
+    struct TDBsource
+    {
+        public string IP;
+        public string port;
+        public string account;
+        public string password;
+        public TDBsource(string IP, string port, string account, string password)
+        {
+            this.IP = IP;
+            this.port = port;
+            this.account = account;
+            this.password = password;
+        }
+    }
 }
