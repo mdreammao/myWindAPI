@@ -48,6 +48,26 @@ namespace myWindAPI
             SaveOptionInformationList();
 
         }
+
+
+        /// <summary>
+        /// 查找当日存在合约的函数。
+        /// </summary>
+        /// <param name="date">日期</param>
+        /// <returns>合约代码的数组。</returns>
+        public int[] GetOptionNameByDate(int date)
+        {
+            List<int> nameList = new List<int>();
+            foreach (var option in myOptionList)
+            {
+                if (option.Value.startDate<=date && option.Value.endDate>=date)
+                {
+                    nameList.Add(option.Key);
+                }
+            }
+            return nameList.ToArray();
+        }
+
         /// <summary>
         /// 从数据库中读取期权信息，并判断是否完整。
         /// </summary>
@@ -99,6 +119,8 @@ namespace myWindAPI
             }
             return false;
         }
+
+
         /// <summary>
         /// 按日期遍历，添加期权信息。写入静态哈希表myOptionList。
         /// </summary>
@@ -145,6 +167,11 @@ namespace myWindAPI
             w.stop();
         }
 
+
+        /// <summary>
+        /// 将获取的期权信息数据存入到数据库中。
+        /// </summary>
+        /// <returns>返回是否存储成功的判断。</returns>
         private bool SaveOptionInformationList()
         {
             bool success = false;

@@ -10,6 +10,29 @@ namespace myWindAPI
     /// </summary>
     class Impv
     {
+
+        /// <summary>
+        /// 计算每一份期权的开仓保证金。
+        /// </summary>
+        /// <param name="etfClose">etf收盘价</param>
+        /// <param name="optionSettle">期权结算价</param>
+        /// <param name="strike">期权行权价</param>
+        /// <param name="optionType">期权类型</param>
+        /// <returns>返回保证金</returns>
+        public static double Margin(double etfClose,double optionSettle,double strike,string optionType)
+        {
+            double myMargin = 0;
+            if (optionType == "认购")
+            {
+                myMargin = optionSettle + Math.Max(0.12 * etfClose - Math.Max(strike - etfClose, 0), 0.07 * etfClose) ;
+            }
+            else
+            {
+                myMargin = Math.Min(optionSettle + Math.Max(0.12 * etfClose - Math.Max(etfClose - strike, 0), 0.07 * strike), strike) ;
+            }
+            return myMargin;
+        }
+
         /// <summary>
         /// 利用期权价格等参数计算隐含波动率
         /// </summary>

@@ -20,12 +20,41 @@ namespace myWindAPI
         public double strike;
         public string market;
     }
+
+    /// <summary>
+    /// 存储期权数据的结构体。包含30多个字段。
+    /// </summary>
+    struct optionDataFormat
+    {
+        public int optionCode;
+        public string optionType;
+        public double strike;
+        public int startDate;
+        public int endDate;
+        public int time;
+        public int tick;
+        public double volumn;
+        public double turnover;
+        public double accVolumn;
+        public double accTurnover;
+        public double open;
+        public double high;
+        public double low;
+        public double lastPrice;
+        public double preSettle;
+        public double preClose;
+        public double[] ask, askv, bid, bidv;
+        public double openMargin;
+        public double askVolatility,bidVolatility,midVolatility;
+        public double askDelta, bidDelta, midDelta;
+    }
+
     /// <summary>
     /// 需要提取TDB数据的品种信息。
     /// </summary>
     struct TDBdataInformation
     {
-        public string codeName;
+        public string market;
         public int startDate;
         public int endDate;
         public string type;

@@ -19,7 +19,7 @@ namespace myWindAPI
         /// <summary>
         /// 记录50etf的表名称。
         /// </summary>
-        public static string tableOf50ETF = "SH510050";
+        public static string tableOf50ETF = "sh510050";
         /// <summary>
         /// 保存交易日信息的数据表的名称。
         /// </summary>
@@ -44,5 +44,9 @@ namespace myWindAPI
         /// 商品期货连接信息。
         /// </summary>
         public static TDBsource commoditySource = new TDBsource("114.80.154.34", "10060", "TD5928909014", "13305104");
+        /// <summary>
+        /// 无风险收益率。
+        /// </summary>
+        public static double RiskFreeReturn = 0.05;
     }
 }

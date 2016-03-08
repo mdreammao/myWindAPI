@@ -284,6 +284,30 @@ namespace myWindAPI
 
 
         /// <summary>
+        /// 静态函数。将时间转化为数组下标。
+        /// </summary>
+        /// <param name="time">时间</param>
+        /// <returns>数组下标</returns>
+        public static int TimeToIndex(int time)
+        {
+            int hour = time / 10000000;
+            time = time % 10000000;
+            int minute = time / 100000;
+            time = time % 100000;
+            int tick = time / 500;
+            int index;
+            if (hour>=13)
+            {
+                index = (hour - 13) * 7200 + minute * 120 + tick;
+            }
+            else
+            {
+                index = (int)(((double)hour - 9.5) * 7200) + minute * 120 + tick;
+            }
+            return index;
+        }
+
+        /// <summary>
         /// 静态函数。给出下一交易日。
         /// </summary>
         /// <param name="today">当前交易日</param>
