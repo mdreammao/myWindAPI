@@ -43,15 +43,15 @@ namespace myWindAPI
         /// <param name="r">无风险利率</param>
         /// <param name="optionType">期权类型区分看涨还是看跌</param>
         /// <returns>返回隐含波动率</returns>
-        public static double sigma(double etfPrice, double optionPrice, double strike, int duration, double r, string optionType)
+        public static double sigma(double etfPrice, double optionPrice, double strike, double duration, double r, string optionType)
         {
             if (optionType.Equals("认购"))
             {
-                return sigmaOfCall(optionPrice, etfPrice, strike, ((double)duration) / 252.0, r);
+                return sigmaOfCall(optionPrice, etfPrice, strike, duration / 252.0, r);
             }
             else if (optionType.Equals("认沽"))
             {
-                return sigmaOfPut(optionPrice, etfPrice, strike, ((double)duration) / 252.0, r);
+                return sigmaOfPut(optionPrice, etfPrice, strike, duration / 252.0, r);
             }
             return 0;
         }
@@ -65,15 +65,15 @@ namespace myWindAPI
         /// <param name="r">无风险利率</param>
         /// <param name="optionType">期权类型看涨还是看跌</param>
         /// <returns>返回期权理论价格</returns>
-        public static double optionPrice(double etfPrice, double sigma, double strike, int duration, double r, string optionType)
+        public static double optionPrice(double etfPrice, double sigma, double strike, double duration, double r, string optionType)
         {
             if (optionType.Equals("认购"))
             {
-                return callPrice(etfPrice, strike, sigma, ((double)duration) / 252.0, r);
+                return callPrice(etfPrice, strike, sigma, duration / 252.0, r);
             }
             else if (optionType.Equals("认沽"))
             {
-                return putPrice(etfPrice, strike, sigma, ((double)duration) / 252.0, r);
+                return putPrice(etfPrice, strike, sigma, duration / 252.0, r);
             }
             return 0.0;
         }
@@ -87,7 +87,7 @@ namespace myWindAPI
         /// <param name="r">无风险利率</param>
         /// <param name="optionType">期权类型看涨还是看跌</param>
         /// <returns></returns>
-        public static double optionDelta(double etfPrice, double sigma, double strike, int duration, double r, string optionType)
+        public static double optionDelta(double etfPrice, double sigma, double strike, double duration, double r, string optionType)
         {
             if (duration <= 0)
             {
@@ -99,7 +99,7 @@ namespace myWindAPI
                 return (optionType == "认购") ? 1 : -1;
             }
             double delta = 0;
-            double durationByYear = (double)duration / 252;
+            double durationByYear = duration / 252;
             double d1 = (Math.Log(etfPrice / strike) + (r + sigma * sigma / 2) * durationByYear) / (sigma * Math.Sqrt(durationByYear));
             if (optionType == "认购")
             {
@@ -120,7 +120,7 @@ namespace myWindAPI
         /// <param name="duration">期权到期日</param>
         /// <param name="r">无风险利率</param>
         /// <returns></returns>
-        public static double optionGamma(double etfPrice, double sigma, double strike, int duration, double r)
+        public static double optionGamma(double etfPrice, double sigma, double strike, double duration, double r)
         {
             double gamma = 0;
             if (duration <= 0)
@@ -128,7 +128,7 @@ namespace myWindAPI
                 Console.WriteLine("duration Wrong!");
                 return 0;
             }
-            double durationByYear = (double)duration / 252;
+            double durationByYear = duration / 252;
             double d1 = (Math.Log(etfPrice / strike) + (r + sigma * sigma / 2) * durationByYear) / (sigma * Math.Sqrt(durationByYear));
             gamma = 1 / (Math.Sqrt(2 * Math.PI) * sigma * Math.Sqrt(durationByYear) * etfPrice) * Math.Exp(-d1 * d1 / 2);
             return gamma;

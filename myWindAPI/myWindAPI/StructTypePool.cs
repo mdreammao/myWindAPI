@@ -31,6 +31,7 @@ namespace myWindAPI
         public double strike;
         public int startDate;
         public int endDate;
+        public int date;
         public int time;
         public int tick;
         public double volumn;

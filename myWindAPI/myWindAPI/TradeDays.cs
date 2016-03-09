@@ -298,7 +298,7 @@ namespace myWindAPI
             int index;
             if (hour>=13)
             {
-                index = (hour - 13) * 7200 + minute * 120 + tick;
+                index =14400+ (hour - 13) * 7200 + minute * 120 + tick;
             }
             else
             {

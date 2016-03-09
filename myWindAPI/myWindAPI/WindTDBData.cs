@@ -14,27 +14,31 @@ namespace myWindAPI
     /// </summary>
     class WindTDBData
     {
+        //一些全局变量的获取。
         private string connectString = Configuration.connectString;
         private string dataBaseName = Configuration.dataBaseName;
         private string tableOf50ETF = Configuration.tableOf50ETF;
+        private string tableOfOptionAll = Configuration.tableOfOptionAll;
+
         /// <summary>
         /// TDB数据接口类。
         /// </summary>
         private TDBDataSource tdbSource;
+        
         /// <summary>
         /// 需要获取数据的名称类型等。
         /// </summary>
         public TDBdataInformation dataInformation = new TDBdataInformation();
+        
         /// <summary>
         /// TDB数据库连接信息。
         /// </summary>
         public TDBsource mySource = new TDBsource();
+        
         /// <summary>
         /// 记录交易日信息的类。
         /// </summary>
         public TradeDays myTradeDays;
-
-
 
         /// <summary>
         /// 新建50etf数据表的函数。
@@ -58,7 +62,6 @@ namespace myWindAPI
                 
         }
 
-
         /// <summary>
         /// 新建期权数据表。
         /// </summary>
@@ -69,7 +72,7 @@ namespace myWindAPI
             {
                 conn.Open();//打开数据库  
                 SqlCommand cmd = conn.CreateCommand();
-                cmd.CommandText = "create table [" + dataBaseName + "].[dbo].[" + tableOfOption + "] (Code int,OptionType char(4),[Strike] float,[StartDate] int,[EndDate] int,[Date] int not null,[Time] int not null, [Tick] int not null,[Volume] float,[Turnover] float,[AccVolume] float,[AccTurnover] float,[Open] float,[High] float,[Low] float,[LastPrice] float,Ask1 float,Ask2 float,Ask3 float,Ask4 float,Ask5 float,Askv1 float,Askv2 float,Askv3 float,Askv4 float,Askv5 float,Bid1 float,Bid2 float,Bid3 float,Bid4 float,Bid5 float,Bidv1 float,Bidv2 float,Bidv3 float,Bidv4 float,Bidv5 float,[PreClose] float,[PreSettle] float,[OpenMargin] float,[AskVolatility] float,[MidVolatility] float,[BidVolatility] float,[AskDelta] float,[MidDelta] float,[BidDelta] float,primary key ([Date],[Time],[Tick]))";
+                cmd.CommandText = "create table [" + dataBaseName + "].[dbo].[" + tableOfOption + "] ([Code] int not null,[OptionType] char(4),[Strike] float,[StartDate] int,[EndDate] int,[Date] int not null,[Time] int not null, [Tick] int not null,[Volume] float,[Turnover] float,[AccVolume] float,[AccTurnover] float,[Open] float,[High] float,[Low] float,[LastPrice] float,[Ask1] float,[Ask2] float,[Ask3] float,[Ask4] float,[Ask5] float,[Askv1] float,[Askv2] float,[Askv3] float,[Askv4] float,[Askv5] float,[Bid1] float,[Bid2] float,[Bid3] float,[Bid4] float,[Bid5] float,[Bidv1] float,[Bidv2] float,[Bidv3] float,[Bidv4] float,[Bidv5] float,[PreClose] float,[PreSettle] float,[OpenMargin] float,[AskVolatility] float,[MidVolatility] float,[BidVolatility] float,[AskDelta] float,[MidDelta] float,[BidDelta] float,primary key ([Code],[Date],[Time],[Tick]))";
                 try
                 {
                     cmd.ExecuteReader();
@@ -159,7 +162,6 @@ namespace myWindAPI
             //关闭连接
             tdbSource.DisConnect();
         }
-
 
         /// <summary>
         /// 判断TDB数据库是否连接成功。
@@ -361,6 +363,184 @@ namespace myWindAPI
         }
 
         /// <summary>
+        /// 将整理过的期权数据存入指定的表。
+        /// </summary>
+        /// <param name="optionList">期权数据</param>
+        /// <param name="tableName">表名称</param>
+        /// <param name="date">日期</param>
+        /// <param name="code">代码名称</param>
+        public void InsertOptionData(List<optionDataFormat> optionList,string tableName,int date,int code)
+        {
+            using (SqlConnection conn=new SqlConnection(connectString))
+            {
+                conn.Open();
+
+                Console.WriteLine("Insert option {0} data of Date {1} into table {2} : {3}", code, date,tableName,optionList.Count);
+                DataTable todayData = new DataTable();
+                #region DataTable的列名的建立
+                todayData.Columns.Add("Code", typeof(string));
+                todayData.Columns.Add("OptionType", typeof(string));
+                todayData.Columns.Add("Strike", typeof(double));
+                todayData.Columns.Add("StartDate", typeof(int));
+                todayData.Columns.Add("EndDate", typeof(int));
+                todayData.Columns.Add("Date", typeof(int));
+                todayData.Columns.Add("Time", typeof(int));
+                todayData.Columns.Add("Tick", typeof(int));
+                todayData.Columns.Add("Volume", typeof(double));
+                todayData.Columns.Add("Turnover", typeof(double));
+                todayData.Columns.Add("AccVolume", typeof(double));
+                todayData.Columns.Add("AccTurnover", typeof(double));
+                todayData.Columns.Add("Open", typeof(double));
+                todayData.Columns.Add("High", typeof(double));
+                todayData.Columns.Add("Low", typeof(double));
+                todayData.Columns.Add("LastPrice", typeof(double));
+                todayData.Columns.Add("Ask1", typeof(double));
+                todayData.Columns.Add("Ask2", typeof(double));
+                todayData.Columns.Add("Ask3", typeof(double));
+                todayData.Columns.Add("Ask4", typeof(double));
+                todayData.Columns.Add("Ask5", typeof(double));
+                todayData.Columns.Add("Askv1", typeof(double));
+                todayData.Columns.Add("Askv2", typeof(double));
+                todayData.Columns.Add("Askv3", typeof(double));
+                todayData.Columns.Add("Askv4", typeof(double));
+                todayData.Columns.Add("Askv5", typeof(double));
+                todayData.Columns.Add("Bid1", typeof(double));
+                todayData.Columns.Add("Bid2", typeof(double));
+                todayData.Columns.Add("Bid3", typeof(double));
+                todayData.Columns.Add("Bid4", typeof(double));
+                todayData.Columns.Add("Bid5", typeof(double));
+                todayData.Columns.Add("Bidv1", typeof(double));
+                todayData.Columns.Add("Bidv2", typeof(double));
+                todayData.Columns.Add("Bidv3", typeof(double));
+                todayData.Columns.Add("Bidv4", typeof(double));
+                todayData.Columns.Add("Bidv5", typeof(double));
+                todayData.Columns.Add("PreClose", typeof(double));
+                todayData.Columns.Add("PreSettle", typeof(double));
+                todayData.Columns.Add("OpenMargin", typeof(double));
+                todayData.Columns.Add("AskVolatility", typeof(double));
+                todayData.Columns.Add("MidVolatility", typeof(double));
+                todayData.Columns.Add("BidVolatility", typeof(double));
+                todayData.Columns.Add("AskDelta", typeof(double));
+                todayData.Columns.Add("MidDelta", typeof(double));
+                todayData.Columns.Add("BidDelta", typeof(double));
+                #endregion
+                foreach (optionDataFormat option in optionList)
+                {
+                    #region 将数据写入每一行中。
+                    DataRow r = todayData.NewRow();
+                    r["Code"] = option.optionCode;
+                    r["OptionType"] = option.optionType;
+                    r["Strike"] = option.strike;
+                    r["StartDate"] = option.startDate;
+                    r["EndDate"] = option.endDate;
+                    r["Date"] = option.date;
+                    r["Time"] = option.time;
+                    r["Tick"] = option.tick;
+                    r["Volume"] = option.volumn;
+                    r["Turnover"] = option.turnover;
+                    r["AccVolume"] = option.accVolumn;
+                    r["AccTurnover"] = option.accTurnover;
+                    r["Open"] = option.open;
+                    r["High"] = option.high;
+                    r["Low"] = option.low;
+                    r["LastPrice"] = option.lastPrice;
+                    r["Ask1"] = option.ask[0];
+                    r["Ask2"] = option.ask[1];
+                    r["Ask3"] = option.ask[2];
+                    r["Ask4"] = option.ask[3];
+                    r["Ask5"] = option.ask[4];
+                    r["Askv1"] = option.askv[0];
+                    r["Askv2"] = option.askv[1];
+                    r["Askv3"] = option.askv[2];
+                    r["Askv4"] = option.askv[3];
+                    r["Askv5"] = option.askv[4];
+                    r["Bid1"] = option.bid[0];
+                    r["Bid2"] = option.bid[1];
+                    r["Bid3"] = option.bid[2];
+                    r["Bid4"] = option.bid[3];
+                    r["Bid5"] = option.bid[4];
+                    r["Bidv1"] = option.bidv[0];
+                    r["Bidv2"] = option.bidv[1];
+                    r["Bidv3"] = option.bidv[2];
+                    r["Bidv4"] = option.bidv[3];
+                    r["Bidv5"] = option.bidv[4];
+                    r["PreClose"] = option.preClose;
+                    r["PreSettle"] = option.preSettle;
+                    r["OpenMargin"] = option.openMargin;
+                    r["AskVolatility"] = option.askVolatility;
+                    r["MidVolatility"] = option.midVolatility;
+                    r["BidVolatility"] = option.bidVolatility;
+                    r["AskDelta"] = option.askDelta;
+                    r["MidDelta"] = option.midDelta;
+                    r["BidDelta"] = option.bidDelta;
+                    todayData.Rows.Add(r);
+                    #endregion
+                }
+                using (SqlBulkCopy bulk = new SqlBulkCopy(connectString))
+                {
+                    try
+                    {
+                        bulk.BatchSize = 100000;
+                        bulk.DestinationTableName = tableName;
+                        #region 依次建立数据的映射。
+                        bulk.ColumnMappings.Add("Code", "Code");
+                        bulk.ColumnMappings.Add("OptionType", "OptionType");
+                        bulk.ColumnMappings.Add("Strike", "Strike");
+                        bulk.ColumnMappings.Add("StartDate", "StartDate");
+                        bulk.ColumnMappings.Add("EndDate", "EndDate");
+                        bulk.ColumnMappings.Add("Date", "Date");
+                        bulk.ColumnMappings.Add("Time", "Time");
+                        bulk.ColumnMappings.Add("Tick", "Tick");
+                        bulk.ColumnMappings.Add("Volume", "Volume");
+                        bulk.ColumnMappings.Add("Turnover", "Turnover");
+                        bulk.ColumnMappings.Add("AccVolume", "AccVolume");
+                        bulk.ColumnMappings.Add("AccTurnover", "AccTurnover");
+                        bulk.ColumnMappings.Add("Open", "Open");
+                        bulk.ColumnMappings.Add("High", "High");
+                        bulk.ColumnMappings.Add("Low", "Low");
+                        bulk.ColumnMappings.Add("LastPrice", "LastPrice");
+                        bulk.ColumnMappings.Add("Ask1", "Ask1");
+                        bulk.ColumnMappings.Add("Ask2", "Ask2");
+                        bulk.ColumnMappings.Add("Ask3", "Ask3");
+                        bulk.ColumnMappings.Add("Ask4", "Ask4");
+                        bulk.ColumnMappings.Add("Ask5", "Ask5");
+                        bulk.ColumnMappings.Add("Askv1", "Askv1");
+                        bulk.ColumnMappings.Add("Askv2", "Askv2");
+                        bulk.ColumnMappings.Add("Askv3", "Askv3");
+                        bulk.ColumnMappings.Add("Askv4", "Askv4");
+                        bulk.ColumnMappings.Add("Askv5", "Askv5");
+                        bulk.ColumnMappings.Add("Bid1", "Bid1");
+                        bulk.ColumnMappings.Add("Bid2", "Bid2");
+                        bulk.ColumnMappings.Add("Bid3", "Bid3");
+                        bulk.ColumnMappings.Add("Bid4", "Bid4");
+                        bulk.ColumnMappings.Add("Bid5", "Bid5");
+                        bulk.ColumnMappings.Add("Bidv1", "Bidv1");
+                        bulk.ColumnMappings.Add("Bidv2", "Bidv2");
+                        bulk.ColumnMappings.Add("Bidv3", "Bidv3");
+                        bulk.ColumnMappings.Add("Bidv4", "Bidv4");
+                        bulk.ColumnMappings.Add("Bidv5", "Bidv5");
+                        bulk.ColumnMappings.Add("PreClose", "PreClose");
+                        bulk.ColumnMappings.Add("PreSettle", "PreSettle");
+                        bulk.ColumnMappings.Add("OpenMargin", "OpenMargin");
+                        bulk.ColumnMappings.Add("AskVolatility", "AskVolatility");
+                        bulk.ColumnMappings.Add("MidVolatility", "MidVolatility");
+                        bulk.ColumnMappings.Add("BidVolatility", "BidVolatility");
+                        bulk.ColumnMappings.Add("AskDelta", "AskDelta");
+                        bulk.ColumnMappings.Add("MidDelta", "MidDelta");
+                        bulk.ColumnMappings.Add("BidDelta", "BidDelta");
+                        #endregion
+                        bulk.WriteToServer(todayData);
+                    }
+                    catch (Exception myerror)
+                    {
+                        System.Console.WriteLine(myerror.Message);
+                    }
+                }
+                conn.Close();
+            }
+        }
+
+        /// <summary>
         /// 按日期来保存期权数据，并作简单的计算得到波动率保证金等。
         /// </summary>
         /// <param name="startDate">开始时间</param>
@@ -378,6 +558,17 @@ namespace myWindAPI
                 double[] etfPrice = GetETFData(today);
                 //接下来获取对应日期的50etf期权的合约编号。
                 int[] optionList = myOptionInfo.GetOptionNameByDate(today);
+                //创建存放所有期权的表。
+                if (SqlApplication.CheckExist(dataBaseName, tableOfOptionAll))
+                {
+                   // Console.WriteLine("Table of {0} exists!", tableOfOptionAll);
+
+                }
+                else
+                {
+                    Console.WriteLine("Crating table of {0}", tableOfOptionAll);
+                    CreateTableOfOption(tableOfOptionAll);
+                }
                 //最后遍历所有的option进行处理以及存储。注意会涉及到波动率和delta的计算。耗时较长。
                 foreach (int optionCode in optionList)
                 {
@@ -388,7 +579,7 @@ namespace myWindAPI
                     string tableOfOption = "sh" + optionCode.ToString();
                     if (SqlApplication.CheckExist(dataBaseName, tableOfOption))
                     {
-                        Console.WriteLine("Table of {0} exists!",tableOfOption);
+                        //Console.WriteLine("Table of {0} exists!",tableOfOption);
 
                     }
                     else
@@ -396,11 +587,11 @@ namespace myWindAPI
                         Console.WriteLine("Crating table of {0}",tableOfOption);
                         CreateTableOfOption(tableOfOption);
                     }
-                    //###################################################
-                    //核心内容存储期权数据。
-                    //###################################################
+                    //按单独的表存储。
+                    InsertOptionData(optionDataModified, tableOfOption, today, optionCode);
+                    //按整体的表存储。
+                    InsertOptionData(optionDataModified, tableOfOptionAll, today, optionCode);
                 }
-
             }
         }
 
@@ -447,6 +638,7 @@ namespace myWindAPI
                 optionData.strike = OptionInformation.myOptionList[optionCode].strike;
                 optionData.startDate = OptionInformation.myOptionList[optionCode].startDate;
                 optionData.endDate = OptionInformation.myOptionList[optionCode].endDate;
+                optionData.date = date;
                 optionData.time = time;
                 optionData.tick = tick;
                 optionData.volumn = data.m_iVolume;
@@ -540,7 +732,7 @@ namespace myWindAPI
             {
                 conn.Open();
                 SqlCommand cmd = conn.CreateCommand();
-                cmd.CommandText = "select [Time],[Tick],[lastPrice] from ["+dataBaseName+"].[dbo].["+tableOf50ETF+"] where [Date]="+date.ToString();
+                cmd.CommandText = "select [Time],[Tick],[lastPrice] from ["+dataBaseName+"].[dbo].["+tableOf50ETF+"] where [Date]="+date.ToString()+" and [Time]>=92500000";
                 try
                 {
                     SqlDataReader reader = cmd.ExecuteReader();
@@ -603,19 +795,20 @@ namespace myWindAPI
                 {
                     continue;
                 }
+                //按每日分成28800个tick计算时间。
+                double tickDuration = (double)duration + 1- index / 28800;
                 //开始计算希腊值以及开仓保证金。
-                option.askVolatility = Impv.sigma(etfPrice[index], option.ask[0], strike, duration, Configuration.RiskFreeReturn, option.optionType);
-                option.bidVolatility = Impv.sigma(etfPrice[index], option.bid[0], strike, duration, Configuration.RiskFreeReturn, option.optionType);
-                option.midVolatility = Impv.sigma(etfPrice[index], (option.bid[0]+option.ask[0])/2, strike, duration, Configuration.RiskFreeReturn, option.optionType);
-                option.askDelta = Impv.optionDelta(etfPrice[index], option.askVolatility, strike, duration, Configuration.RiskFreeReturn, option.optionType);
-                option.bidDelta = Impv.optionDelta(etfPrice[index], option.bidVolatility, strike, duration, Configuration.RiskFreeReturn, option.optionType);
-                option.midDelta = Impv.optionDelta(etfPrice[index], option.midVolatility, strike, duration, Configuration.RiskFreeReturn, option.optionType);
+                option.askVolatility = Impv.sigma(etfPrice[index], option.ask[0], strike, tickDuration, Configuration.RiskFreeReturn, option.optionType);
+                option.bidVolatility = Impv.sigma(etfPrice[index], option.bid[0], strike, tickDuration, Configuration.RiskFreeReturn, option.optionType);
+                option.midVolatility = Impv.sigma(etfPrice[index], (option.bid[0]+option.ask[0])/2, strike, tickDuration, Configuration.RiskFreeReturn, option.optionType);
+                option.askDelta = Impv.optionDelta(etfPrice[index], option.askVolatility, strike, tickDuration, Configuration.RiskFreeReturn, option.optionType);
+                option.bidDelta = Impv.optionDelta(etfPrice[index], option.bidVolatility, strike, tickDuration, Configuration.RiskFreeReturn, option.optionType);
+                option.midDelta = Impv.optionDelta(etfPrice[index], option.midVolatility, strike, tickDuration, Configuration.RiskFreeReturn, option.optionType);
                 option.openMargin = Impv.Margin(etfPreClose, preSettle, strike, option.optionType);
                 modifiedList.Add(option);
             }
             return modifiedList;
         }
-
 
         /// <summary>
         /// 获取IH期货数据的函数。

@@ -21,6 +21,10 @@ namespace myWindAPI
         /// </summary>
         public static string tableOf50ETF = "sh510050";
         /// <summary>
+        /// 记录所有期权的表名称。
+        /// </summary>
+        public static string tableOfOptionAll = "optionAll";
+        /// <summary>
         /// 保存交易日信息的数据表的名称。
         /// </summary>
         public static string tradeDaysTableName = "myTradeDays";
