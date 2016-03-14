@@ -7,7 +7,6 @@ using System.Data.SqlClient;
 using WAPIWrapperCSharp;
 using WindCommon;
 using System.Data;
-using System.Data.SqlClient;
 using System.Globalization;
 
 namespace myWindAPI
@@ -92,11 +91,13 @@ namespace myWindAPI
                 myTradeTicks[timeIndex] = IndexToTime(timeIndex);
             }
             //生成回测日期内的第四个星期三和第三个星期五。
-            GetForthWednesday();
-            GetThirdFriday();
+            if (ThirdFridayList == null)
+            {
+                GetForthWednesday();
+                GetThirdFriday();
+            }
 
         }
-
 
         /// <summary>
         /// 从本地数据库中读取交易日信息的函数。
@@ -368,6 +369,7 @@ namespace myWindAPI
             }
             return 0;
         }
+
         /// <summary>
         /// 静态函数。给出前一交易日。
         /// </summary>

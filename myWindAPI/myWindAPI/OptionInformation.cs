@@ -7,7 +7,6 @@ using System.Data.SqlClient;
 using WAPIWrapperCSharp;
 using WindCommon;
 using System.Data;
-using System.Data.SqlClient;
 
 namespace myWindAPI
 {
