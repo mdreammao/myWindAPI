@@ -91,7 +91,7 @@ namespace myWindAPI
                 myTradeTicks[timeIndex] = IndexToTime(timeIndex);
             }
             //生成回测日期内的第四个星期三和第三个星期五。
-            if (ThirdFridayList == null)
+            if (ThirdFridayList.Count==0)
             {
                 GetForthWednesday();
                 GetThirdFriday();
