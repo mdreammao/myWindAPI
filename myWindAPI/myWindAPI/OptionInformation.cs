@@ -140,7 +140,7 @@ namespace myWindAPI
             w.start();
             foreach (int today in myTradeDays.myTradeDays)
             {
-                if (TradeDays.isExpiryDate(today) || today == myTradeDays.myTradeDays[myTradeDays.myTradeDays.Count - 1])
+                if (TradeDays.IsOptionExerciseDate(today) || today == myTradeDays.myTradeDays[myTradeDays.myTradeDays.Count - 1])
                 {
                     WindData optionToday = w.wset("OptionChain", "date=" + today.ToString() + ";us_code=" + Configuration.underlyingAsset + ";option_var=;month=全部;call_put=全部");
                     object[] optionList = optionToday.data as object[];
@@ -155,8 +155,8 @@ namespace myWindAPI
                         option.executeType = (string)optionList[i * 13 + 6 - 1];
                         option.strike = (double)optionList[i * 13 + 7 - 1];
                         option.optionType = (string)optionList[i * 13 + 9 - 1];
-                        option.startDate = TradeDays.DateTimeToDays((DateTime)optionList[i * 13 + 10 - 1]);
-                        option.endDate = TradeDays.DateTimeToDays((DateTime)optionList[i * 13 + 11 - 1]);
+                        option.startDate = TradeDays.DateTimeToInt((DateTime)optionList[i * 13 + 10 - 1]);
+                        option.endDate = TradeDays.DateTimeToInt((DateTime)optionList[i * 13 + 11 - 1]);
                         if (myOptionList.ContainsKey(option.optionCode) == false)
                         {
                             myOptionList.Add(option.optionCode, option);

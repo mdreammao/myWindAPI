@@ -26,12 +26,20 @@ namespace myWindAPI
         /// </summary>
         private static List<int> tradeDaysOfDataBase=new List<int>();
 
-
         /// <summary>
         /// 存储所有回测时期内的交易日信息。
         /// </summary>
         public List<int> myTradeDays { get; set; }
 
+        /// <summary>
+        /// 存储所有回测期内的第三个星期五日期。
+        /// </summary>
+        public static Dictionary<int,int> ThirdFridayList = new Dictionary<int, int>();
+
+        /// <summary>
+        /// 存储所有回测期内的第四个星期三日期。
+        /// </summary>
+        public static Dictionary<int,int> ForthWednesdayList = new Dictionary<int, int>();
 
         /// <summary>
         /// 存储每日每个tick对应的时刻。
@@ -83,6 +91,10 @@ namespace myWindAPI
             {
                 myTradeTicks[timeIndex] = IndexToTime(timeIndex);
             }
+            //生成回测日期内的第四个星期三和第三个星期五。
+            GetForthWednesday();
+            GetThirdFriday();
+
         }
 
 
@@ -157,7 +169,7 @@ namespace myWindAPI
             foreach (object item in dayData)
             {
                 DateTime today = (DateTime)item;
-                int now = DateTimeToDays(today);
+                int now = DateTimeToInt(today);
                 if (now>theLastDay)
                 {
                     tradeDaysOfDataBase.Add(now);
@@ -246,11 +258,21 @@ namespace myWindAPI
         /// </summary>
         /// <param name="time">DateTime类型的日期</param>
         /// <returns>Int类型的日期</returns>
-        public static int DateTimeToDays(DateTime time)
+        public static int DateTimeToInt(DateTime time)
         {
             return time.Year * 10000 + time.Month * 100 + time.Day;
         }
 
+        /// <summary>
+        /// 将Int格式的日期转化为DateTime格式类型的日期。
+        /// </summary>
+        /// <param name="day"></param>
+        /// <returns></returns>
+        public static DateTime IntToDateTime(int day)
+        {
+            string dayString = DateTime.ParseExact(day.ToString(), "yyyyMMdd", null).ToString();
+            return Convert.ToDateTime(dayString);
+        }
 
         /// <summary>
         /// 静态函数。将数组下标转化为具体时刻。
@@ -325,7 +347,27 @@ namespace myWindAPI
             }
         }
 
+        /// <summary>
+        /// 给出当前日期最近的交易日。如果今日是交易日返回今日，否者返回下一个最近的交易日。
+        /// </summary>
+        /// <param name="today">当前日期</param>
+        /// <returns>交易日</returns>
+        public static int GetRecentTradeDay(int today)
+        {
 
+            for (int i = 0; i < tradeDaysOfDataBase.Count-1; i++)
+            {
+                if (tradeDaysOfDataBase[i]==today)
+                {
+                    return today;
+                }
+                if (tradeDaysOfDataBase[i] < today && tradeDaysOfDataBase[i + 1]>=today)
+                {
+                    return tradeDaysOfDataBase[i + 1];
+                }
+            }
+            return 0;
+        }
         /// <summary>
         /// 静态函数。给出前一交易日。
         /// </summary>
@@ -391,20 +433,110 @@ namespace myWindAPI
         }
 
         /// <summary>
-        /// 判断今日是否是期权行权日。每月第四个星期三。
+        /// 在指定日期的当月，给出指定的第几个星期几。
+        /// </summary>
+        /// <param name="date">给定日期</param>
+        /// <param name="whichWeek">第几个</param>
+        /// <param name="whichDayOfWeek">星期几</param>
+        /// <returns>找到的日期</returns>
+        private int GetSpecialDate(DateTime date,int whichWeek,string whichDayOfWeek)
+        {
+            DateTime searchDate= DateTime.Parse(date.ToString("yyyy-MM-01"));
+            int year = searchDate.Year;
+            int month = searchDate.Month;
+            int number = 0;
+            while (searchDate.Year==year && searchDate.Month==month)
+            {
+                if (searchDate.DayOfWeek.ToString()==whichDayOfWeek)
+                {
+                    number += 1;
+                    if (number==whichWeek)
+                    {
+                        return DateTimeToInt(searchDate);
+                    }
+                }
+                searchDate = searchDate.AddDays(1);
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// 获取每个月第四个星期三。
+        /// </summary>
+        private void GetForthWednesday()
+        {
+            DateTime firstDate = DateTime.Parse(IntToDateTime(myTradeDays[0]).ToString("yyyy-MM-01"));
+            DateTime endDate = DateTime.Parse(IntToDateTime(myTradeDays[myTradeDays.Count - 1]).ToString("yyyy-MM-01")); IntToDateTime(myTradeDays[myTradeDays.Count - 1]);
+            while (firstDate<=endDate)
+            {
+                int date =GetRecentTradeDay(GetSpecialDate(firstDate, 4, "Wednesday"));
+                ForthWednesdayList.Add(firstDate.Year * 100 + firstDate.Month, date);
+                firstDate = firstDate.AddMonths(1);
+            }
+
+        }
+
+        /// <summary>
+        /// 获取每个月第三个星期五。
+        /// </summary>
+        private void GetThirdFriday()
+        {
+            DateTime firstDate = DateTime.Parse(IntToDateTime(myTradeDays[0]).ToString("yyyy-MM-01"));
+            DateTime endDate = DateTime.Parse(IntToDateTime(myTradeDays[myTradeDays.Count - 1]).ToString("yyyy-MM-01")); IntToDateTime(myTradeDays[myTradeDays.Count - 1]);
+            while (firstDate<= endDate)
+            {
+                int date =GetRecentTradeDay(GetSpecialDate(firstDate, 3, "Friday"));
+
+                ThirdFridayList.Add(firstDate.Year * 100 + firstDate.Month, date);
+                firstDate = firstDate.AddMonths(1);
+            }
+
+        }
+
+        /// <summary>
+        /// 判断今日是否是期权行权日。每月第四个星期三。如果不是交易日，顺延到下一个交易日。
         /// </summary>
         /// <param name="day">日期</param>
         /// <returns>是否是行权日</returns>
-        public static bool isExpiryDate (int day)
+        public static bool IsOptionExerciseDate (int day)
         {
-            DateTimeFormatInfo format = new DateTimeFormatInfo();
-            string dayString = DateTime.ParseExact(day.ToString(), "yyyyMMdd", null).ToString();
-            DateTime today = Convert.ToDateTime(dayString);
-            if (today.AddDays(-21).Month==today.Month && today.AddDays(-28).Month != today.Month && today.DayOfWeek.ToString()=="Wednesday")
+            DateTime today = IntToDateTime(day);
+            if (day==ForthWednesdayList[today.Year*100+today.Month])
             {
                 return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// 判断今日是否是金融期货的交割日。每月第三个星期五。如果不是交易日，顺延到下一个交易日。
+        /// </summary>
+        /// <param name="day">日期</param>
+        /// <returns>是否是交割日</returns>
+        public static bool IsFinacialFutureDeliveryDate(int day)
+        {
+            DateTime today = IntToDateTime(day);
+            if (day == ThirdFridayList[today.Year * 100 + today.Month])
+            {
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 判断当日是本月第几周。
+        /// </summary>
+        /// <param name="day">日期</param>
+        /// <returns>第几周</returns>
+        public static int WeekOfMonth(int day)
+        {
+            DateTime today = IntToDateTime(day);
+            int daysOfWeek = 7;
+            if (today.AddDays(0 - daysOfWeek).Month != today.Month) return 1;
+            if (today.AddDays(0 - 2 * daysOfWeek).Month != today.Month) return 2;
+            if (today.AddDays(0 - 3 * daysOfWeek).Month != today.Month) return 3;
+            if (today.AddDays(0 - 4 * daysOfWeek).Month != today.Month) return 4;
+            return 5;
         }
     }
 }

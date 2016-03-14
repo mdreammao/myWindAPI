@@ -14,11 +14,13 @@ namespace myWindAPI
     /// </summary>
     class WindTDBData
     {
-        //一些全局变量的获取。
+        //一些全局变量的获取。主要是表的名称。
         private string connectString = Configuration.connectString;
         private string dataBaseName = Configuration.dataBaseName;
         private string tableOf50ETF = Configuration.tableOf50ETF;
         private string tableOfOptionAll = Configuration.tableOfOptionAll;
+        private string tableOfIHFront = Configuration.tableOfIHFront;
+        private string tableofIHNext = Configuration.tableofIHNext;
 
         /// <summary>
         /// TDB数据接口类。
@@ -85,6 +87,24 @@ namespace myWindAPI
 
         }
 
+        private void CreateTableOfFinancialFuture(string tableOfFinancialFuture)
+        {
+            using (SqlConnection conn = new SqlConnection(connectString))
+            {
+                conn.Open();//打开数据库  
+                SqlCommand cmd = conn.CreateCommand();
+                cmd.CommandText = "create table [" + dataBaseName + "].[dbo].[" + tableOfFinancialFuture + "] ([Code] int not null,[Date] int not null,[Time] int not null, [Tick] int not null,[Volume] float,[Turnover] float,[AccVolume] float,[AccTurnover] float,[Open] float,[High] float,[Low] float,[LastPrice] float,[Ask1] float,[Ask2] float,[Ask3] float,[Ask4] float,[Ask5] float,[Askv1] float,[Askv2] float,[Askv3] float,[Askv4] float,[Askv5] float,[Bid1] float,[Bid2] float,[Bid3] float,[Bid4] float,[Bid5] float,[Bidv1] float,[Bidv2] float,[Bidv3] float,[Bidv4] float,[Bidv5] float,[PreClose] float,primary key ([Code],[Date],[Time],[Tick]))";
+                try
+                {
+                    cmd.ExecuteReader();
+                }
+                catch (Exception myerror)
+                {
+                    System.Console.WriteLine(myerror.Message);
+                }
+            }
+        }
+
         /// <summary>
         /// 50etf数据的计数函数。
         /// </summary>
@@ -149,6 +169,10 @@ namespace myWindAPI
                         Store50ETFData();
                         //核心函数，保存50etf期权的数据。
                         StoreOptionData(dataInformation.startDate, dataInformation.endDate);
+                        break;
+                    case "ih":
+                        //StoreFinancialFuturesData(type, tableOfIHFront,tableofIHNext);
+                        StoreFinancialFuturesData(type);
                         break;
                     default:
                         break;
@@ -369,16 +393,15 @@ namespace myWindAPI
         /// <param name="tableName">表名称</param>
         /// <param name="date">日期</param>
         /// <param name="code">代码名称</param>
-        public void InsertOptionData(List<optionDataFormat> optionList,string tableName,int date,int code)
+        public bool InsertOptionData(List<optionDataFormat> optionList,string tableName,int date,int code)
         {
+            bool success = false;
             using (SqlConnection conn=new SqlConnection(connectString))
             {
                 conn.Open();
-
-                Console.WriteLine("Insert option {0} data of Date {1} into table {2} : {3}", code, date,tableName,optionList.Count);
                 DataTable todayData = new DataTable();
                 #region DataTable的列名的建立
-                todayData.Columns.Add("Code", typeof(string));
+                todayData.Columns.Add("Code", typeof(int));
                 todayData.Columns.Add("OptionType", typeof(string));
                 todayData.Columns.Add("Strike", typeof(double));
                 todayData.Columns.Add("StartDate", typeof(int));
@@ -530,13 +553,192 @@ namespace myWindAPI
                         bulk.ColumnMappings.Add("BidDelta", "BidDelta");
                         #endregion
                         bulk.WriteToServer(todayData);
+                        Console.WriteLine("Date:{0}, Option: {1} insert data: {2} to {3}", date, code, optionList.Count,tableName);
+                        success = true;
                     }
                     catch (Exception myerror)
                     {
                         System.Console.WriteLine(myerror.Message);
+                        for (int i = 0; i < optionList.Count; i++)
+                        {
+                            if (optionList[i].askVolatility>0)
+                            {
+                                continue;
+                            }
+                            Console.Write("{0}, {1}  ",optionList[i].time,Math.Round(optionList[i].askVolatility,2));
+                        }
+                        Console.WriteLine("Date:{0}, Option: {1} insert data: {2} to {3} error!!", date, code, optionList.Count, tableName);
+                        success = false;
                     }
                 }
                 conn.Close();
+                return success;
+            }
+        }
+
+        /// <summary>
+        /// 根据合约名称和表名称以及日期存储数据。
+        /// </summary>
+        /// <param name="contractName">合约名称</param>
+        /// <param name="tableName">表名称</param>
+        /// <param name="date">日期</param>
+        /// <returns>是否存储成功</returns>
+        public bool InsertFinancialFutureDate(string contractName,string tableName,int date)
+        {
+            TDBReqFuture reqFuture = new TDBReqFuture(contractName,date,date);
+            TDBFutureAB[] futureABArr;
+            reqFuture.m_nAutoComplete = 0;
+            TDBErrNo nErrInner = tdbSource.GetFutureAB(reqFuture, out futureABArr);
+            bool success = false;
+            using (SqlConnection conn = new SqlConnection(connectString))
+            {
+                conn.Open();
+                DataTable todayData = new DataTable();
+                #region DataTable的列名的建立
+                todayData.Columns.Add("Code", typeof(int));
+                todayData.Columns.Add("Date", typeof(int));
+                todayData.Columns.Add("Time", typeof(int));
+                todayData.Columns.Add("Tick", typeof(int));
+                todayData.Columns.Add("Volume", typeof(double));
+                todayData.Columns.Add("Turnover", typeof(double));
+                todayData.Columns.Add("AccVolume", typeof(double));
+                todayData.Columns.Add("AccTurnover", typeof(double));
+                todayData.Columns.Add("Open", typeof(double));
+                todayData.Columns.Add("High", typeof(double));
+                todayData.Columns.Add("Low", typeof(double));
+                todayData.Columns.Add("LastPrice", typeof(double));
+                todayData.Columns.Add("Ask1", typeof(double));
+                todayData.Columns.Add("Ask2", typeof(double));
+                todayData.Columns.Add("Ask3", typeof(double));
+                todayData.Columns.Add("Ask4", typeof(double));
+                todayData.Columns.Add("Ask5", typeof(double));
+                todayData.Columns.Add("Askv1", typeof(double));
+                todayData.Columns.Add("Askv2", typeof(double));
+                todayData.Columns.Add("Askv3", typeof(double));
+                todayData.Columns.Add("Askv4", typeof(double));
+                todayData.Columns.Add("Askv5", typeof(double));
+                todayData.Columns.Add("Bid1", typeof(double));
+                todayData.Columns.Add("Bid2", typeof(double));
+                todayData.Columns.Add("Bid3", typeof(double));
+                todayData.Columns.Add("Bid4", typeof(double));
+                todayData.Columns.Add("Bid5", typeof(double));
+                todayData.Columns.Add("Bidv1", typeof(double));
+                todayData.Columns.Add("Bidv2", typeof(double));
+                todayData.Columns.Add("Bidv3", typeof(double));
+                todayData.Columns.Add("Bidv4", typeof(double));
+                todayData.Columns.Add("Bidv5", typeof(double));
+                todayData.Columns.Add("PreClose", typeof(double));
+                #endregion
+                int tick = 0;
+                int lastTime = 0;
+                foreach (TDBFutureAB data in futureABArr)
+                {
+                    int time = data.m_nTime;
+                    if (time > lastTime)
+                    {
+                        lastTime = time;
+                        tick = 0;
+                    }
+                    else
+                    {
+                        tick += 1;
+                    }
+                    #region 将数据写入每一行中。将万德TDB格式转换为本地数据库格式。
+                    DataRow r = todayData.NewRow();
+                    r["Code"] =Convert.ToInt32(contractName.Substring(2, 4));
+                    r["Date"] = date;
+                    r["Time"] = time;
+                    r["Tick"] = tick;
+                    r["Volume"] = data.m_iVolume;
+                    r["Turnover"] = data.m_iTurover;
+                    r["AccVolume"] = data.m_iAccVolume;
+                    r["AccTurnover"] = data.m_iAccTurover;
+                    r["Open"] = Convert.ToDouble(data.m_nOpen) / 10000;
+                    r["High"] = Convert.ToDouble(data.m_nHigh) / 10000;
+                    r["Low"] = Convert.ToDouble(data.m_nLow) / 10000;
+                    r["LastPrice"] = Convert.ToDouble(data.m_nPrice) / 10000;
+                    r["Ask1"] = Convert.ToDouble(data.m_nAskPrice[0]) / 10000;
+                    r["Ask2"] = Convert.ToDouble(data.m_nAskPrice[1]) / 10000;
+                    r["Ask3"] = Convert.ToDouble(data.m_nAskPrice[2]) / 10000;
+                    r["Ask4"] = Convert.ToDouble(data.m_nAskPrice[3]) / 10000;
+                    r["Ask5"] = Convert.ToDouble(data.m_nAskPrice[4]) / 10000;
+                    r["Askv1"] = data.m_nAskVolume[0];
+                    r["Askv2"] = data.m_nAskVolume[1];
+                    r["Askv3"] = data.m_nAskVolume[2];
+                    r["Askv4"] = data.m_nAskVolume[3];
+                    r["Askv5"] = data.m_nAskVolume[4];
+                    r["Bid1"] = Convert.ToDouble(data.m_nBidPrice[0]) / 10000;
+                    r["Bid2"] = Convert.ToDouble(data.m_nBidPrice[1]) / 10000;
+                    r["Bid3"] = Convert.ToDouble(data.m_nBidPrice[2]) / 10000;
+                    r["Bid4"] = Convert.ToDouble(data.m_nBidPrice[3]) / 10000;
+                    r["Bid5"] = Convert.ToDouble(data.m_nBidPrice[4]) / 10000;
+                    r["Bidv1"] = data.m_nBidVolume[0];
+                    r["Bidv2"] = data.m_nBidVolume[1];
+                    r["Bidv3"] = data.m_nBidVolume[2];
+                    r["Bidv4"] = data.m_nBidVolume[3];
+                    r["Bidv5"] = data.m_nBidVolume[4];
+                    r["PreClose"] = Convert.ToDouble(data.m_nPreClose) / 10000;
+                    if (Convert.ToDouble(data.m_nAskPrice[0]) * data.m_nAskVolume[0] * Convert.ToDouble(data.m_nBidPrice[0]) * data.m_nBidVolume[0] != 0)
+                        //保证盘口价格有数据。
+                    {
+                        todayData.Rows.Add(r);
+                    }
+                    
+                    #endregion
+                }
+                using (SqlBulkCopy bulk = new SqlBulkCopy(connectString))
+                {
+                    try
+                    {
+                        bulk.BatchSize = 100000;
+                        bulk.DestinationTableName = tableName;
+                        #region 依次建立数据的映射。
+                        bulk.ColumnMappings.Add("Code", "Code");
+                        bulk.ColumnMappings.Add("Date", "Date");
+                        bulk.ColumnMappings.Add("Time", "Time");
+                        bulk.ColumnMappings.Add("Tick", "Tick");
+                        bulk.ColumnMappings.Add("Volume", "Volume");
+                        bulk.ColumnMappings.Add("Turnover", "Turnover");
+                        bulk.ColumnMappings.Add("AccVolume", "AccVolume");
+                        bulk.ColumnMappings.Add("AccTurnover", "AccTurnover");
+                        bulk.ColumnMappings.Add("Open", "Open");
+                        bulk.ColumnMappings.Add("High", "High");
+                        bulk.ColumnMappings.Add("Low", "Low");
+                        bulk.ColumnMappings.Add("LastPrice", "LastPrice");
+                        bulk.ColumnMappings.Add("Ask1", "Ask1");
+                        bulk.ColumnMappings.Add("Ask2", "Ask2");
+                        bulk.ColumnMappings.Add("Ask3", "Ask3");
+                        bulk.ColumnMappings.Add("Ask4", "Ask4");
+                        bulk.ColumnMappings.Add("Ask5", "Ask5");
+                        bulk.ColumnMappings.Add("Askv1", "Askv1");
+                        bulk.ColumnMappings.Add("Askv2", "Askv2");
+                        bulk.ColumnMappings.Add("Askv3", "Askv3");
+                        bulk.ColumnMappings.Add("Askv4", "Askv4");
+                        bulk.ColumnMappings.Add("Askv5", "Askv5");
+                        bulk.ColumnMappings.Add("Bid1", "Bid1");
+                        bulk.ColumnMappings.Add("Bid2", "Bid2");
+                        bulk.ColumnMappings.Add("Bid3", "Bid3");
+                        bulk.ColumnMappings.Add("Bid4", "Bid4");
+                        bulk.ColumnMappings.Add("Bid5", "Bid5");
+                        bulk.ColumnMappings.Add("Bidv1", "Bidv1");
+                        bulk.ColumnMappings.Add("Bidv2", "Bidv2");
+                        bulk.ColumnMappings.Add("Bidv3", "Bidv3");
+                        bulk.ColumnMappings.Add("Bidv4", "Bidv4");
+                        bulk.ColumnMappings.Add("Bidv5", "Bidv5");
+                        bulk.ColumnMappings.Add("PreClose", "PreClose");
+                        #endregion
+                        bulk.WriteToServer(todayData);
+                        Console.WriteLine("Date:{0}, Future: {1} insert data: {2} to {3}", date, Convert.ToInt32(contractName.Substring(2, 4)), futureABArr.Length, tableName);
+                        success = true;
+                    }
+                    catch (Exception myerror)
+                    {
+                        System.Console.WriteLine(myerror.Message);
+                        success = false;
+                    }
+                }
+                conn.Close();
+                return success;
             }
         }
 
@@ -551,6 +753,8 @@ namespace myWindAPI
             OptionInformation myOptionInfo = new OptionInformation(startDate, endDate);
             //预处理获取50etf前收盘价。
             Dictionary<int, double> etfPreCloseList = GetETFPreCloseList(startDate, endDate);
+            //记录每个期权合约最大的记录日期，只能在最大记录日期后一日插入。
+            Dictionary<int, int> optionMaxDate = new Dictionary<int, int>();
             //按日期进行遍历。
             foreach (int today in myTradeDays.myTradeDays)
             {
@@ -558,39 +762,48 @@ namespace myWindAPI
                 double[] etfPrice = GetETFData(today);
                 //接下来获取对应日期的50etf期权的合约编号。
                 int[] optionList = myOptionInfo.GetOptionNameByDate(today);
-                //创建存放所有期权的表。
-                if (SqlApplication.CheckExist(dataBaseName, tableOfOptionAll))
-                {
-                   // Console.WriteLine("Table of {0} exists!", tableOfOptionAll);
-
-                }
-                else
-                {
-                    Console.WriteLine("Crating table of {0}", tableOfOptionAll);
-                    CreateTableOfOption(tableOfOptionAll);
-                }
                 //最后遍历所有的option进行处理以及存储。注意会涉及到波动率和delta的计算。耗时较长。
                 foreach (int optionCode in optionList)
                 {
+                    string tableOfOption = "sh" + optionCode.ToString();
+                    //如果表不存在就建立表格并且将最后日期置为0，否者就查询表格确定最后日期。
+                    if (SqlApplication.CheckExist(dataBaseName, tableOfOption)==false)
+                    {
+                        optionMaxDate.Add(optionCode, 0);
+                        Console.WriteLine("Crating table of {0}", tableOfOption);
+                        CreateTableOfOption(tableOfOption);
+                    }
+                    else
+                    {
+                        if (optionMaxDate.ContainsKey(optionCode)==false)
+                        {
+                            optionMaxDate.Add(optionCode, MaxDateOfOption(tableOfOption, optionCode));
+                            Console.WriteLine("Date: {0} Code: {1} MaxDate: {2}", today, optionCode, optionMaxDate[optionCode]);
+                        }
+                    }
+                    if (today !=TradeDays.GetNextTradeDay(optionMaxDate[optionCode]) && optionMaxDate[optionCode]>0)
+                    {
+                        continue;
+                    }
                     //从TDB数据库中获取原始的期权数据。不包括希腊值保证金等数据。
                     List<optionDataFormat> optionData = GetOptionDataFromTDB(optionCode, today);
                     //计算希腊值等。并对不合理的数据进行进一步的处理。例如处理集合竞价的部分。处理开盘收盘前后的数据。
                     List<optionDataFormat> optionDataModified = ModifyOptionDataFromTDB(today, etfPreCloseList[today], optionData, etfPrice);
-                    string tableOfOption = "sh" + optionCode.ToString();
-                    if (SqlApplication.CheckExist(dataBaseName, tableOfOption))
-                    {
-                        //Console.WriteLine("Table of {0} exists!",tableOfOption);
-
-                    }
-                    else
-                    {
-                        Console.WriteLine("Crating table of {0}",tableOfOption);
-                        CreateTableOfOption(tableOfOption);
-                    }
+                    Console.WriteLine("Date:{0}, Option: {1} TDB exists data: {2}", today, optionCode, optionDataModified.Count);
                     //按单独的表存储。
-                    InsertOptionData(optionDataModified, tableOfOption, today, optionCode);
-                    //按整体的表存储。
-                    InsertOptionData(optionDataModified, tableOfOptionAll, today, optionCode);
+                    bool success=InsertOptionData(optionDataModified, tableOfOption, today, optionCode);
+                    if (success)
+                    {
+                        if (optionMaxDate.ContainsKey(optionCode) == false)
+                        {
+                            optionMaxDate.Add(optionCode, today);
+                        }
+                        else
+                        {
+                            optionMaxDate[optionCode] = today;
+                        }
+                    }
+                    
                 }
             }
         }
@@ -776,7 +989,7 @@ namespace myWindAPI
         /// <param name="optionList">原始的期权数据</param>
         /// <param name="etfPrice">当日etf价格</param>
         /// <returns>修正过的期权数据</returns>
-        public List<optionDataFormat> ModifyOptionDataFromTDB(int today,double etfPreClose, List<optionDataFormat> optionList,double[] etfPrice)
+        private List<optionDataFormat> ModifyOptionDataFromTDB(int today,double etfPreClose, List<optionDataFormat> optionList,double[] etfPrice)
         {
             List<optionDataFormat> modifiedList = new List<optionDataFormat>();
             double strike = optionList[0].strike;
@@ -791,7 +1004,7 @@ namespace myWindAPI
                 optionDataFormat option = optionList[i];
                 int index = TradeDays.TimeToIndex(option.time + option.tick * 500);
                 //排除集合竞价的情况，其他需要排除的情况也可以添加。
-                if (option.ask[0]==option.bid[0] || (option.askv[0]==0 && option.bidv[0]==0) || index<0 || index>=28800)
+                if (option.ask[0]==option.bid[0] || (option.askv[0]==0 || option.bidv[0]==0) || index<0 || index>=28800)
                 {
                     continue;
                 }
@@ -805,17 +1018,160 @@ namespace myWindAPI
                 option.bidDelta = Impv.optionDelta(etfPrice[index], option.bidVolatility, strike, tickDuration, Configuration.RiskFreeReturn, option.optionType);
                 option.midDelta = Impv.optionDelta(etfPrice[index], option.midVolatility, strike, tickDuration, Configuration.RiskFreeReturn, option.optionType);
                 option.openMargin = Impv.Margin(etfPreClose, preSettle, strike, option.optionType);
+                if (!(option.askVolatility>=0))
+                {
+
+                }
                 modifiedList.Add(option);
+
             }
             return modifiedList;
         }
 
         /// <summary>
-        /// 获取IH期货数据的函数。
+        /// 读取期权特定日期的记录数。
         /// </summary>
-        public void GetIHData()
+        /// <param name="tableOfOption">期权表名称</param>
+        /// <param name="code">期权代码</param>
+        /// <param name="date">日期</param>
+        /// <returns>当日记录条数</returns>
+        public int CountDataOfOption(string tableOfOption,int code,int date)
         {
+            using (SqlConnection conn=new SqlConnection(connectString))
+            {
+                conn.Open();//打开数据库  
+                SqlCommand cmd = conn.CreateCommand();
+                cmd.CommandText = "select COUNT(Date) from [" + dataBaseName + "].[dbo].[" + tableOfOption + "] where [Date]=" + date.ToString();
+                try
+                {
 
+                    int number = (int)cmd.ExecuteScalar();
+                    return number;
+                }
+                catch (Exception myerror)
+                {
+                    System.Console.WriteLine(myerror.Message);
+                }
+            }
+            return 0;
+        }
+       
+        
+        /// <summary>
+        /// 读取期权数据最后日期的函数。
+        /// </summary>
+        /// <param name="tableOfOption">表名称</param>
+        /// <param name="code">期权代码</param>
+        /// <returns>最后日期</returns>
+        public int MaxDateOfOption(string tableOfOption, int code)
+        {
+            using (SqlConnection conn = new SqlConnection(connectString))
+            {
+                conn.Open();//打开数据库  
+                SqlCommand cmd = conn.CreateCommand();
+                cmd.CommandText = "select Max(Date) from [" + dataBaseName + "].[dbo].[" + tableOfOption + "]";
+                try
+                {
+                    int number = (int)cmd.ExecuteScalar();
+                    return number;
+                }
+                catch (Exception myerror)
+                {
+                    System.Console.WriteLine(myerror.Message);
+                }
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// 根据金融期货的名称记录当月合约和下月合约
+        /// </summary>
+        /// <param name="futureName">品种名称</param>
+        /// <param name="tableFront">当月合约的表</param>
+        /// <param name="tableNext">下月合约的表</param>
+        public void StoreFinancialFuturesData(string futureName,string tableFront,string tableNext)
+        {
+            //判断当月以及下月的表是否存在，如果不存在建立表格。
+            if (SqlApplication.CheckExist(dataBaseName, tableFront) == false)
+            {
+                Console.WriteLine("Crating table of {0}", tableFront);
+                CreateTableOfFinancialFuture(tableFront);
+            }
+            if (SqlApplication.CheckExist(dataBaseName, tableNext) == false)
+            {
+                Console.WriteLine("Crating table of {0}", tableFront);
+                CreateTableOfFinancialFuture(tableNext);
+            }
+            string frontFuture;
+            string nextFuture;
+            foreach (int today in myTradeDays.myTradeDays)
+            {
+                //必要的日期辨认，根据当日的日期得到对应的当月合约和下月合约。
+                DateTime thisMonth = TradeDays.IntToDateTime(today);
+                DateTime nextMonth = DateTime.Parse(thisMonth.ToString("yyyy-MM-01")).AddMonths(1);
+                DateTime nextTwoMonth=DateTime.Parse(nextMonth.ToString("yyyy-MM-01")).AddMonths(1);
+                if (today<=TradeDays.ThirdFridayList[thisMonth.Year*100+thisMonth.Month] && (futureName=="if" || today>=20150501)) 
+                    //对IH,IF来说，201504的当月合约才IH1505,下月合约为IH1506
+                {
+                    frontFuture = futureName + ((thisMonth.Year % 100) * 100 + thisMonth.Month).ToString() + ".CF";
+                    nextFuture = futureName + ((nextMonth.Year % 100) * 100 + nextMonth.Month).ToString() + ".CF";
+                }
+                else
+                {
+                    frontFuture = futureName + ((nextMonth.Year % 100)*100 + nextMonth.Month).ToString() + ".CF";
+                    nextFuture = futureName + ((nextTwoMonth.Year % 100)*100 + nextTwoMonth.Month).ToString() + ".CF";
+                }
+                //Console.WriteLine("Insert Date:{0}, Date:{1},{2}", today, frontFuture, nextFuture);
+                //记录当月合约
+                InsertFinancialFutureDate(frontFuture, tableFront, today);
+                //记录下月合约
+                InsertFinancialFutureDate(nextFuture, tableNext, today);
+
+            }
+        }
+
+        public void StoreFinancialFuturesData(string futureName)
+        {
+            string frontFuture;
+            string nextFuture;
+            string frontTable;
+            string nextTable;
+            foreach (int today in myTradeDays.myTradeDays)
+            {
+                //必要的日期辨认，根据当日的日期得到对应的当月合约和下月合约。
+                DateTime thisMonth = TradeDays.IntToDateTime(today);
+                DateTime nextMonth = DateTime.Parse(thisMonth.ToString("yyyy-MM-01")).AddMonths(1);
+                DateTime nextTwoMonth = DateTime.Parse(nextMonth.ToString("yyyy-MM-01")).AddMonths(1);
+                if (today <= TradeDays.ThirdFridayList[thisMonth.Year * 100 + thisMonth.Month] && (futureName == "if" || today >= 20150501))
+                //对IH,IF来说，201504的当月合约才IH1505,下月合约为IH1506
+                {
+                    frontFuture = futureName + ((thisMonth.Year % 100) * 100 + thisMonth.Month).ToString() + ".CF";
+                    nextFuture = futureName + ((nextMonth.Year % 100) * 100 + nextMonth.Month).ToString() + ".CF";
+                }
+                else
+                {
+                    frontFuture = futureName + ((nextMonth.Year % 100) * 100 + nextMonth.Month).ToString() + ".CF";
+                    nextFuture = futureName + ((nextTwoMonth.Year % 100) * 100 + nextTwoMonth.Month).ToString() + ".CF";
+                }
+                frontTable = frontFuture.Substring(0, 6);
+                nextTable = nextFuture.Substring(0, 6);
+                //判断当月以及下月的表是否存在，如果不存在建立表格。
+                if (SqlApplication.CheckExist(dataBaseName, frontTable) == false)
+                {
+                    Console.WriteLine("Crating table of {0}", frontTable);
+                    CreateTableOfFinancialFuture(frontTable);
+                }
+                if (SqlApplication.CheckExist(dataBaseName, nextTable) == false)
+                {
+                    Console.WriteLine("Crating table of {0}", nextTable);
+                    CreateTableOfFinancialFuture(nextTable);
+                }
+                //记录当月合约
+                InsertFinancialFutureDate(frontFuture, frontTable, today);
+                //记录下月合约
+                InsertFinancialFutureDate(nextFuture, nextTable, today);
+
+            }
         }
 
     }

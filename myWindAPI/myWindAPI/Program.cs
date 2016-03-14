@@ -28,6 +28,14 @@
 时间：2016-03-09
 版本：v1.0.3
 #######################################################
+1、处理了计算波动率的bug，比如遇到期权价格为0或者期权快到期
+时候的异常处理。
+2、将整理好的IH期货数据存入本地数据库。按合约代码存储，主要
+记录当月的数据和下月的数据。
+作者：毛衡
+时间：2016-03-14
+版本：v1.0.4
+#######################################################
 
 #######################################################
 **/
@@ -47,37 +55,7 @@ namespace myWindAPI
     {
         static void Main(string[] args)
         {
-            WindTDBData myTDBData = new WindTDBData("SH", 20150209, 20151231, "option");
-        }
-        static void DoAPISameple()
-        {
-            WindAPI w = new WindAPI();
-            w.start();
-
-            //wset取沪深300指数成分
-            //WindData wd = w.wset("IndexConstituent", "date=20141215;windcode=000300.SH");
-            //OutputWindData(wd, "wset");
-            //WindData wd = w.wsd("600000.SH,600004.SH", "open", "2014-10-16", "2014-12-16", "");
-            //OutputWindData(wd, "wsd");
-            WindData d = w.tdays("20150101", "20201213", "");
-            object t=d.getDataByFunc("tdays", true);
-            WindData optionInformation = w.wset("OptionChain", "date=20150209;us_code=510050.SH;option_var=;month=全部;call_put=全部");
-            object[] tt = optionInformation.data as object[];
-            Console.WriteLine(optionInformation.data.GetType());
-            Console.WriteLine(tt.GetType());
-            foreach (var item in tt)
-            {
-                Console.WriteLine(item.ToString());
-                Console.WriteLine(item.GetType());
-            }
-           
-            w.stop();
-        }
-
-        static void OutputWindData(WindData wd, string strFuncName)
-        {
-            string s = WindDataMethod.WindDataToString(wd, strFuncName);
-            Console.Write(s);
+            WindTDBData myTDBData = new WindTDBData("CFE", 20150416, 20151231, "ih");
         }
     }
 }

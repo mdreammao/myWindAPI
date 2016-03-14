@@ -227,6 +227,10 @@ namespace myWindAPI
                 {
                     break;
                 }
+                if (Math.Abs(sigma)>100 && duration<1)
+                {
+                    return 0;
+                }
             }
             if (sigma > 3 || sigma < 0)
             {
@@ -261,6 +265,10 @@ namespace myWindAPI
                 if (Math.Abs(sigma - sigmaold) < 0.0001)
                 {
                     break;
+                }
+                if (Math.Abs(sigma) > 100 && duration < 1)
+                {
+                    return 0;
                 }
             }
             if (sigma > 3 || sigma < 0)
