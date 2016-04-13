@@ -23,7 +23,7 @@ namespace myWindAPI
         /// <summary>
         /// 存储历史的交易日信息。
         /// </summary>
-        private static List<int> tradeDaysOfDataBase=new List<int>();
+        private static List<int> tradeDaysOfDataBase;
 
         /// <summary>
         /// 存储所有回测时期内的交易日信息。
@@ -33,12 +33,12 @@ namespace myWindAPI
         /// <summary>
         /// 存储所有回测期内的第三个星期五日期。
         /// </summary>
-        public static Dictionary<int,int> ThirdFridayList = new Dictionary<int, int>();
+        public static Dictionary<int,int> ThirdFridayList ;
 
         /// <summary>
         /// 存储所有回测期内的第四个星期三日期。
         /// </summary>
-        public static Dictionary<int,int> ForthWednesdayList = new Dictionary<int, int>();
+        public static Dictionary<int,int> ForthWednesdayList ;
 
         /// <summary>
         /// 存储每日每个tick对应的时刻。
@@ -62,6 +62,10 @@ namespace myWindAPI
             {
                 Console.WriteLine("Wrong trade Date!");
                 startDate = endDate;
+            }
+            if (tradeDaysOfDataBase==null)
+            {
+                tradeDaysOfDataBase = new List<int>();
             }
             //从本地数据库中读取交易日信息。
             GetDataFromDataBase();
@@ -91,11 +95,13 @@ namespace myWindAPI
                 myTradeTicks[timeIndex] = IndexToTime(timeIndex);
             }
             //生成回测日期内的第四个星期三和第三个星期五。
-            if (ThirdFridayList.Count==0)
+            if (ThirdFridayList==null)
             {
-                GetForthWednesday();
-                GetThirdFriday();
+                ForthWednesdayList = new Dictionary<int, int>();
+                ThirdFridayList = new Dictionary<int, int>();
             }
+            GetForthWednesday();
+            GetThirdFriday();
 
         }
 
@@ -472,7 +478,10 @@ namespace myWindAPI
             while (firstDate<=endDate)
             {
                 int date =GetRecentTradeDay(GetSpecialDate(firstDate, 4, "Wednesday"));
-                ForthWednesdayList.Add(firstDate.Year * 100 + firstDate.Month, date);
+                if (ForthWednesdayList.ContainsKey(firstDate.Year * 100 + firstDate.Month)==false)
+                {
+                    ForthWednesdayList.Add(firstDate.Year * 100 + firstDate.Month, date);
+                }
                 firstDate = firstDate.AddMonths(1);
             }
 
@@ -488,8 +497,10 @@ namespace myWindAPI
             while (firstDate<= endDate)
             {
                 int date =GetRecentTradeDay(GetSpecialDate(firstDate, 3, "Friday"));
-
-                ThirdFridayList.Add(firstDate.Year * 100 + firstDate.Month, date);
+                if (ThirdFridayList.ContainsKey(firstDate.Year * 100 + firstDate.Month)==false)
+                {
+                    ThirdFridayList.Add(firstDate.Year * 100 + firstDate.Month, date);
+                }
                 firstDate = firstDate.AddMonths(1);
             }
 

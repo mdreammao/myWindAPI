@@ -74,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration.cs" />
+    <Compile Include="CsvApplication.cs" />
     <Compile Include="Impv.cs" />
     <Compile Include="LibTDBWrap.cs" />
     <Compile Include="OptionInformation.cs" />

@@ -109,7 +109,7 @@ namespace myWindAPI
             {
                 delta = normcdf(d1) - 1;
             }
-            return delta;
+            return Math.Round(delta,4);
         }
         /// <summary>
         /// 计算期权的希腊值Gamma
@@ -211,6 +211,10 @@ namespace myWindAPI
         private static double sigmaOfCall(double callPrice, double spotPrice, double strike, double duration, double r)
         {
             double sigma = 1, sigmaold = 1;
+            if (callPrice==0)
+            {
+                return 0;
+            }
             if (callPrice < spotPrice - strike * Math.Exp(-r * duration))
             {
                 return 0;
@@ -232,11 +236,11 @@ namespace myWindAPI
                     return 0;
                 }
             }
-            if (sigma > 3 || sigma < 0)
+            if (sigma > 3)
             {
                 sigma = 0;
             }
-            return sigma;
+            return Math.Round(sigma,4);
         }
         /// <summary>
         /// 计算看跌期权隐含波动率。利用简单的牛顿法计算期权隐含波动率。在计算中，当sigma大于3，认为无解并返回0
@@ -250,6 +254,10 @@ namespace myWindAPI
         private static double sigmaOfPut(double putPrice, double spotPrice, double strike, double duration, double r)
         {
             double sigma = 1, sigmaold = 1;
+            if (putPrice == 0)
+            {
+                return 0;
+            }
             if (strike * Math.Exp(-r * duration) - spotPrice > putPrice)
             {
                 return 0;
@@ -266,7 +274,7 @@ namespace myWindAPI
                 {
                     break;
                 }
-                if (Math.Abs(sigma) > 100 && duration < 1)
+                if (Math.Abs(sigma) > 100)
                 {
                     return 0;
                 }
@@ -275,7 +283,7 @@ namespace myWindAPI
             {
                 sigma = 0;
             }
-            return sigma;
+            return Math.Round(sigma,4);
         }
     }
 }

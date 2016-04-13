@@ -34,6 +34,7 @@ namespace myWindAPI
         public int date;
         public int time;
         public int tick;
+        public double underlyingPrice;
         public double volumn;
         public double turnover;
         public double accVolumn;
@@ -44,10 +45,9 @@ namespace myWindAPI
         public double lastPrice;
         public double preSettle;
         public double preClose;
-        public double[] ask, askv, bid, bidv;
+        public double[] ask, askv, askVolatility,askDelta,bid, bidv,bidVolatility,bidDelta;
         public double openMargin;
-        public double askVolatility,bidVolatility,midVolatility;
-        public double askDelta, bidDelta, midDelta;
+        public double midVolatility,midDelta;
     }
 
     /// <summary>

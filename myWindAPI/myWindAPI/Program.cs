@@ -36,7 +36,10 @@
 时间：2016-03-14
 版本：v1.0.4
 #######################################################
-
+1、对期权记录数的结构进行更新，添加了标的价格这个字段。
+作者：毛衡
+时间：2016-04-13
+版本：v1.0.5
 #######################################################
 **/
 
@@ -55,7 +58,10 @@ namespace myWindAPI
     {
         static void Main(string[] args)
         {
-            WindTDBData myTDBData = new WindTDBData("CFE", 20150416, 20151231, "ih");
+            //WindTDBData myTDBData = new WindTDBData("sh", 20160301, 20160331, "50etf");
+            //WindTDBData myTDBData2 = new WindTDBData("sh", 20160101, 20160331, "option");
+            //WindTDBData myTDBData3 = new WindTDBData("CFE", 20160101, 20150331, "ih");
+            WindTDBData myTDBData4 = new WindTDBData("sh", 20160301, 20160331, "50etfOrder");
         }
     }
 }
