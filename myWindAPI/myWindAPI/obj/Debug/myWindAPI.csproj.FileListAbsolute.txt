@@ -1,0 +1,9 @@
+D:\mygithub\myWindAPI\myWindAPI\myWindAPI\bin\Debug\myWindAPI.exe.config
+D:\mygithub\myWindAPI\myWindAPI\myWindAPI\bin\Debug\myWindAPI.exe
+D:\mygithub\myWindAPI\myWindAPI\myWindAPI\bin\Debug\myWindAPI.pdb
+D:\mygithub\myWindAPI\myWindAPI\myWindAPI\bin\Debug\BkgrdIntf.dll
+D:\mygithub\myWindAPI\myWindAPI\myWindAPI\bin\Debug\WAPIWrapperCSharp.dll
+D:\mygithub\myWindAPI\myWindAPI\myWindAPI\bin\Debug\BkgrdIntf.pdb
+D:\mygithub\myWindAPI\myWindAPI\myWindAPI\obj\Debug\myWindAPI.csprojResolveAssemblyReference.cache
+D:\mygithub\myWindAPI\myWindAPI\myWindAPI\obj\Debug\myWindAPI.exe
+D:\mygithub\myWindAPI\myWindAPI\myWindAPI\obj\Debug\myWindAPI.pdb

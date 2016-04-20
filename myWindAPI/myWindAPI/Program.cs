@@ -61,7 +61,8 @@ namespace myWindAPI
             //WindTDBData myTDBData = new WindTDBData("sh", 20160301, 20160331, "50etf");
             //WindTDBData myTDBData2 = new WindTDBData("sh", 20160101, 20160331, "option");
             //WindTDBData myTDBData3 = new WindTDBData("CFE", 20160101, 20150331, "ih");
-            WindTDBData myTDBData4 = new WindTDBData("sh", 20160301, 20160331, "50etfOrder");
+            //WindTDBData myTDBData4 = new WindTDBData("sh", 20160301, 20160331, "50etfOrder");
+            WindTDBData myTDBData5 = new WindTDBData("dce", 20100501, 20151231, "commodity");
         }
     }
 }
